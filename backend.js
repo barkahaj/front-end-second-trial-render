@@ -1,19 +1,4 @@
-const backendURL = 'https://backend-trial-render.onrender.com';
-
-function renderPosts(posts) {
-  const container = document.getElementById('posts');
-  const isAdmin = document.body.classList.contains('admin');
-
-  container.innerHTML = posts.map(post => `
-    <div data-id="${post.id}">
-      <h3>${post.title}</h3>
-      <p>${post.content}</p>
-      ${isAdmin ? `<button class="deleteBtn">🗑 Delete</button>` : ''}
-    </div>
-  `).join('');
-
-  if (isAdmin) setupDeleteButtons();
-}
+const backendURL = 'https://backend-trial-render.onrender.com'; // Change to your actual backend URL
 
 function loadPosts() {
   const container = document.getElementById('posts');
@@ -21,22 +6,23 @@ function loadPosts() {
 
   fetch(`${backendURL}/posts`)
     .then(res => res.json())
-    .then(renderPosts);
+    .then(posts => renderPosts(posts));
 }
 
-function setupLiveUpdates() {
-  if (document.body.classList.contains('admin')) return; // Admin doesn't need live updates
+function renderPosts(posts) {
+  const container = document.getElementById('posts');
+  const isAdmin = document.body.classList.contains('admin');
 
-  const eventSource = new EventSource(`${backendURL}/stream`);
-  eventSource.onmessage = (event) => {
-    const posts = JSON.parse(event.data);
-    renderPosts(posts);
-  };
+  container.innerHTML = posts.map(post => `
+    <div data-id="${post.id}" style="border:1px solid #ccc; padding:10px; margin-bottom:10px;">
+      <h3>${post.title}</h3>
+      ${post.image ? `<img src="${backendURL}${post.image}" style="max-width:100%; height:auto;" />` : ''}
+      <p>${post.content}</p>
+      ${isAdmin ? `<button class="deleteBtn">🗑 Delete</button>` : ''}
+    </div>
+  `).join('');
 
-  eventSource.onerror = (err) => {
-    console.error('SSE connection error:', err);
-    eventSource.close(); // optional: reconnect logic
-  };
+  if (isAdmin) setupDeleteButtons();
 }
 
 function setupDeleteButtons() {
@@ -51,9 +37,9 @@ function setupDeleteButtons() {
         });
 
         if (res.ok) {
-          postEl.remove(); // Admin sees immediate removal
+          postEl.remove();
         } else {
-          alert('Failed to delete post.');
+          alert('❌ Failed to delete post.');
         }
       }
     });
@@ -67,25 +53,18 @@ function setupPostForm() {
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const title = form.title.value.trim();
-    const content = form.content.value.trim();
-
-    if (!title || !content) {
-      status.textContent = 'Both fields are required.';
-      return;
-    }
+    const formData = new FormData(form);
 
     try {
       const res = await fetch(`${backendURL}/posts`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, content })
+        body: formData
       });
 
       if (res.ok) {
         form.reset();
         status.textContent = '✅ Post submitted!';
-        // No need to call loadPosts() — live updates will handle it
+        loadPosts();
       } else {
         status.textContent = '❌ Failed to submit post.';
       }
@@ -95,7 +74,5 @@ function setupPostForm() {
   });
 }
 
-// Initial setup
 loadPosts();
-setupLiveUpdates();
 setupPostForm();
