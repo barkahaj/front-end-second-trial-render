@@ -1,24 +1,42 @@
 const backendURL = 'https://backend-trial-render.onrender.com';
 
+function renderPosts(posts) {
+  const container = document.getElementById('posts');
+  const isAdmin = document.body.classList.contains('admin');
+
+  container.innerHTML = posts.map(post => `
+    <div data-id="${post.id}">
+      <h3>${post.title}</h3>
+      <p>${post.content}</p>
+      ${isAdmin ? `<button class="deleteBtn">🗑 Delete</button>` : ''}
+    </div>
+  `).join('');
+
+  if (isAdmin) setupDeleteButtons();
+}
+
 function loadPosts() {
   const container = document.getElementById('posts');
   if (!container) return;
 
   fetch(`${backendURL}/posts`)
     .then(res => res.json())
-    .then(posts => {
-      const isAdmin = document.body.classList.contains('admin');
+    .then(renderPosts);
+}
 
-      container.innerHTML = posts.map(post => `
-        <div data-id="${post.id}">
-          <h3>${post.title}</h3>
-          <p>${post.content}</p>
-          ${isAdmin ? `<button class="deleteBtn">🗑 Delete</button>` : ''}
-        </div>
-      `).join('');
+function setupLiveUpdates() {
+  if (document.body.classList.contains('admin')) return; // Admin doesn't need live updates
 
-      if (isAdmin) setupDeleteButtons();
-    });
+  const eventSource = new EventSource(`${backendURL}/stream`);
+  eventSource.onmessage = (event) => {
+    const posts = JSON.parse(event.data);
+    renderPosts(posts);
+  };
+
+  eventSource.onerror = (err) => {
+    console.error('SSE connection error:', err);
+    eventSource.close(); // optional: reconnect logic
+  };
 }
 
 function setupDeleteButtons() {
@@ -33,7 +51,7 @@ function setupDeleteButtons() {
         });
 
         if (res.ok) {
-          postEl.remove();
+          postEl.remove(); // Admin sees immediate removal
         } else {
           alert('Failed to delete post.');
         }
@@ -67,7 +85,7 @@ function setupPostForm() {
       if (res.ok) {
         form.reset();
         status.textContent = '✅ Post submitted!';
-        loadPosts(); // Refresh post list after submit
+        // No need to call loadPosts() — live updates will handle it
       } else {
         status.textContent = '❌ Failed to submit post.';
       }
@@ -77,5 +95,7 @@ function setupPostForm() {
   });
 }
 
+// Initial setup
 loadPosts();
+setupLiveUpdates();
 setupPostForm();
