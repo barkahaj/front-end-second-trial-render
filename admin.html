@@ -1,22 +1,18 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Admin Panel</title>
+  <title>Admin - Simple Blog</title>
   <script src="backend.js" defer></script>
 </head>
 <body class="admin">
   <h1>Admin Panel</h1>
-
   <form id="postForm" enctype="multipart/form-data">
-    <input type="text" name="title" placeholder="Title" required /><br>
-    <textarea name="content" placeholder="Content" required></textarea><br>
-    <input type="file" name="image" accept="image/*" /><br>
+    <input type="text" name="title" placeholder="Title" required />
+    <textarea name="content" placeholder="Content" required></textarea>
+    <input type="file" name="image" accept="image/*" />
     <button type="submit">Post</button>
-    <p id="status"></p>
   </form>
-
-  <h2>Existing Posts</h2>
+  <p id="status"></p>
   <div id="posts"></div>
 </body>
 </html>
