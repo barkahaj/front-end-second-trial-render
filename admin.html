@@ -4,7 +4,7 @@
   <title>Admin - Submit Blog</title>
   <script src="backend.js" defer></script>
 </head>
-<body>
+<body class="admin">
   <h1>Submit New Post</h1>
   <form id="postForm">
     <input type="text" name="title" placeholder="Title" required />
@@ -14,5 +14,8 @@
     <button type="submit">Post</button>
   </form>
   <p id="status"></p>
+
+  <h2>All Posts</h2>
+  <div id="posts"></div>
 </body>
 </html>
